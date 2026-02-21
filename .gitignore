@@ -3,3 +3,4 @@ dist/
 kg/graph.json
 .env
 *.tsbuildinfo
+session-transcript.md
