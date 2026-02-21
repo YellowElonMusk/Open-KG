@@ -1,0 +1,7 @@
+Architecture Notes - Project Phoenix
+
+The Architecture RFC document describes the target state for Project Phoenix.
+Carol Wu is assigned to review the Architecture RFC.
+The API Redesign task depends on the Architecture RFC being approved.
+Alice Chen owns the Architecture RFC document.
+Acme Corp is the organization sponsoring all of this work.
