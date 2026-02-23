@@ -1,9 +1,6 @@
 node_modules/
 dist/
-kg/graph.json
-kg/.cache.json
-kg/graph.html
-kg/graph.dot
+.kg/
 .env
 *.tsbuildinfo
 session-transcript.md

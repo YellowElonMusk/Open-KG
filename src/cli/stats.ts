@@ -1,13 +1,19 @@
 import { graphExists, readGraph } from "../graph/store.js";
 import type { KnowledgeGraph } from "../graph/types.js";
+import * as ui from "./ui.js";
 
 function formatStats(graph: KnowledgeGraph): string {
   const lines: string[] = [];
 
-  lines.push(`Nodes: ${graph.nodes.length}`);
-  lines.push(`Edges: ${graph.edges.length}`);
+  lines.push(
+    ui.header("Graph Stats"),
+  );
+  lines.push(
+    `${ui.brand("│")} ${ui.accent(String(graph.nodes.length))} nodes  ${ui.accent(String(graph.edges.length))} edges`,
+  );
 
   if (graph.nodes.length === 0) {
+    lines.push(ui.footer());
     return lines.join("\n");
   }
 
@@ -16,10 +22,10 @@ function formatStats(graph: KnowledgeGraph): string {
   for (const node of graph.nodes) {
     typeCounts.set(node.type, (typeCounts.get(node.type) ?? 0) + 1);
   }
-  lines.push("");
-  lines.push("By type:");
+  lines.push(`${ui.brand("│")}`);
+  lines.push(`${ui.brand("│")} ${ui.bold("By type:")}`);
   for (const [type, count] of [...typeCounts.entries()].sort()) {
-    lines.push(`  ${type}: ${count}`);
+    lines.push(`${ui.brand("│")}   ${type}: ${ui.accent(String(count))}`);
   }
 
   // Count by relationship type
@@ -28,10 +34,10 @@ function formatStats(graph: KnowledgeGraph): string {
     relCounts.set(edge.type, (relCounts.get(edge.type) ?? 0) + 1);
   }
   if (relCounts.size > 0) {
-    lines.push("");
-    lines.push("Relationships:");
+    lines.push(`${ui.brand("│")}`);
+    lines.push(`${ui.brand("│")} ${ui.bold("Relationships:")}`);
     for (const [type, count] of [...relCounts.entries()].sort()) {
-      lines.push(`  ${type}: ${count}`);
+      lines.push(`${ui.brand("│")}   ${type}: ${ui.accent(String(count))}`);
     }
   }
 
@@ -43,10 +49,12 @@ function formatStats(graph: KnowledgeGraph): string {
     }
   }
   if (sources.size > 0) {
-    lines.push("");
-    lines.push(`Sources: ${sources.size} document(s)`);
+    lines.push(`${ui.brand("│")}`);
+    lines.push(
+      `${ui.brand("│")} ${ui.bold("Sources:")} ${ui.accent(String(sources.size))} document(s)`,
+    );
     for (const src of [...sources].sort()) {
-      lines.push(`  ${src}`);
+      lines.push(`${ui.brand("│")}   ${ui.dim(src)}`);
     }
   }
 
@@ -63,15 +71,18 @@ function formatStats(graph: KnowledgeGraph): string {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   if (topNodes.length > 0) {
-    lines.push("");
-    lines.push("Most connected:");
+    lines.push(`${ui.brand("│")}`);
+    lines.push(`${ui.brand("│")} ${ui.bold("Most connected:")}`);
     for (const [id, count] of topNodes) {
       const node = graph.nodes.find((n) => n.id === id);
       const name = node ? node.name : id;
-      lines.push(`  ${name}: ${count} connections`);
+      lines.push(
+        `${ui.brand("│")}   ${ui.bold(name)}: ${ui.accent(String(count))} connections`,
+      );
     }
   }
 
+  lines.push(ui.footer());
   return lines.join("\n");
 }
 
@@ -79,7 +90,9 @@ export async function statsCommand(): Promise<void> {
   try {
     const exists = await graphExists();
     if (!exists) {
-      console.error("No graph found. Run 'kg build <folder>' first.");
+      console.error(
+        ui.err("No graph found. Run 'kg build <folder>' first."),
+      );
       process.exitCode = 1;
       return;
     }
@@ -87,7 +100,9 @@ export async function statsCommand(): Promise<void> {
     const graph = await readGraph();
     console.log(formatStats(graph));
   } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : err}`);
+    console.error(
+      ui.err(`Error: ${err instanceof Error ? err.message : err}`),
+    );
     process.exitCode = 1;
   }
 }

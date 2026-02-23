@@ -4,6 +4,7 @@ import { emptyGraph } from "../graph/store.js";
 import { mergeGraphs, processExtraction } from "../graph/resolver.js";
 import type { LLMProvider } from "../llm/interface.js";
 import type { LoadedDocument } from "./loader.js";
+import * as ui from "../cli/ui.js";
 
 export async function extractFromDocuments(
   documents: LoadedDocument[],
@@ -15,10 +16,9 @@ export async function extractFromDocuments(
 
   for (let i = 0; i < total; i++) {
     const doc = documents[i];
-    const label = `[${i + 1}/${total}]`;
 
     try {
-      console.error(`${label} Extracting from ${doc.filePath}...`);
+      console.error(ui.progress(i + 1, total, `Extracting from ${ui.accent(doc.filePath)}...`));
       const result = await llm.extractEntities(doc.content, doc.filePath);
 
       const { nodes, edges } = processExtraction(
@@ -29,14 +29,16 @@ export async function extractFromDocuments(
         RELATIONSHIP_TYPES,
       );
 
-      console.error(
-        `${label} Found ${nodes.length} entities, ${edges.length} relationships`,
-      );
+      // Show discovered entities in tree format
+      for (const node of nodes) {
+        console.error(ui.treeNode(node.name, node.type));
+      }
+      console.error(ui.treeSummary(doc.filePath, nodes.length, edges.length));
 
       graph = mergeGraphs(graph, { nodes, edges });
     } catch (err) {
       console.error(
-        `${label} Warning: Failed to extract from ${doc.filePath}: ${err instanceof Error ? err.message : err}`,
+        `${ui.brand("│")} ${ui.err("✗")} Failed: ${doc.filePath}: ${err instanceof Error ? err.message : err}`,
       );
     }
   }

@@ -5,7 +5,7 @@ import type { KnowledgeGraph } from "./types.js";
 const GRAPH_FILENAME = "graph.json";
 
 function defaultKgDir(): string {
-  return join(process.cwd(), "kg");
+  return join(process.cwd(), ".kg");
 }
 
 export function emptyGraph(): KnowledgeGraph {

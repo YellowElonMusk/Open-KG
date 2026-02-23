@@ -1,5 +1,6 @@
 import { graphExists, readGraph } from "../graph/store.js";
 import type { KnowledgeGraph } from "../graph/types.js";
+import * as ui from "./ui.js";
 
 function formatMarkdown(graph: KnowledgeGraph): string {
   const lines: string[] = [];
@@ -61,7 +62,9 @@ export async function exportCommand(options: {
   try {
     const exists = await graphExists();
     if (!exists) {
-      console.error("No graph found. Run 'kg build <folder>' first.");
+      console.error(
+        ui.err("No graph found. Run 'kg build <folder>' first."),
+      );
       process.exitCode = 1;
       return;
     }
@@ -81,12 +84,14 @@ export async function exportCommand(options: {
         break;
       default:
         console.error(
-          `Unknown format '${format}'. Use: json, markdown, or dot`,
+          ui.err(`Unknown format '${format}'. Use: json, markdown, or dot`),
         );
         process.exitCode = 1;
     }
   } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : err}`);
+    console.error(
+      ui.err(`Error: ${err instanceof Error ? err.message : err}`),
+    );
     process.exitCode = 1;
   }
 }

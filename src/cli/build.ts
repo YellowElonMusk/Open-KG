@@ -4,6 +4,7 @@ import { readGraph, writeGraph, graphExists } from "../graph/store.js";
 import { createLLMProvider } from "../llm/claude.js";
 import { checkCache, updateCache } from "../pipeline/cache.js";
 import type { LoadedDocument } from "../pipeline/loader.js";
+import * as ui from "./ui.js";
 
 const LARGE_FILE_BYTES = 100 * 1024; // 100KB
 
@@ -12,11 +13,14 @@ export async function buildCommand(
   options: { model?: string; dryRun?: boolean },
 ): Promise<void> {
   try {
-    console.error(`Scanning ${folder}...`);
+    const startTime = Date.now();
+    console.error(ui.header(`Building knowledge graph from ${ui.accent(folder)}`));
 
     const documents = await loadDocuments(folder);
     if (documents.length === 0) {
-      console.error(`No .md or .txt files found in '${folder}'.`);
+      console.error(
+        ui.err(`No .md or .txt files found in '${folder}'.`),
+      );
       process.exitCode = 1;
       return;
     }
@@ -26,7 +30,7 @@ export async function buildCommand(
       d.filePath.endsWith(".txt"),
     ).length;
     console.error(
-      `Found ${documents.length} documents (${mdCount} .md, ${txtCount} .txt)`,
+      `${ui.brand("│")} Found ${ui.accent(String(documents.length))} documents (${mdCount} .md, ${txtCount} .txt)`,
     );
 
     // Warn about large files
@@ -35,7 +39,7 @@ export async function buildCommand(
       if (sizeBytes > LARGE_FILE_BYTES) {
         const sizeKB = Math.round(sizeBytes / 1024);
         console.error(
-          `Warning: ${doc.filePath} is ${sizeKB}KB — large files cost more tokens and may extract poorly.`,
+          `${ui.brand("│")} ${ui.warn("▲")} ${doc.filePath} is ${sizeKB}KB — large files cost more tokens`,
         );
       }
     }
@@ -46,32 +50,36 @@ export async function buildCommand(
 
     if (cache.unchanged.length > 0 && cache.changed.length === 0) {
       console.error(
-        `All ${cache.unchanged.length} documents unchanged — nothing to do.`,
+        `${ui.brand("│")} ${ui.success("✓")} All ${cache.unchanged.length} documents unchanged — nothing to do.`,
       );
+      console.error(ui.footer());
       return;
     } else if (cache.unchanged.length > 0) {
       console.error(
-        `Skipping ${cache.unchanged.length} unchanged document(s), processing ${cache.changed.length} new/modified.`,
+        `${ui.brand("│")} ${ui.dim(`Skipping ${cache.unchanged.length} cached, processing ${cache.changed.length} new/modified`)}`,
       );
       docsToProcess = cache.changed;
     } else {
       docsToProcess = documents;
     }
 
-    // Dry-run mode — show what would be processed
+    // Privacy banner — show exactly what's sent to the LLM
+    const fileInfo = docsToProcess.map((d) => ({
+      name: d.filePath,
+      sizeKB: (Buffer.byteLength(d.content, "utf-8") / 1024).toFixed(1),
+    }));
+    console.error(ui.privacyBanner(fileInfo));
+
+    // Dry-run mode
     if (options.dryRun) {
-      console.error(`\n--- Dry run ---`);
-      for (const doc of docsToProcess) {
-        const sizeKB = (
-          Buffer.byteLength(doc.content, "utf-8") / 1024
-        ).toFixed(1);
-        console.error(`  ${doc.filePath} (${sizeKB}KB)`);
-      }
       console.error(
-        `\nWould extract from ${docsToProcess.length} document(s). Run without --dry-run to proceed.`,
+        `${ui.brand("│")}\n${ui.brand("│")} ${ui.warn("DRY RUN")} — would extract from ${docsToProcess.length} document(s). Run without --dry-run to proceed.`,
       );
+      console.error(ui.footer());
       return;
     }
+
+    console.error(`${ui.brand("│")}`);
 
     const llm = createLLMProvider(options.model);
 
@@ -86,12 +94,18 @@ export async function buildCommand(
     await writeGraph(graph);
     await updateCache(documents);
 
+    const elapsed = Date.now() - startTime;
     console.error(
-      `\nDone. ${graph.nodes.length} nodes, ${graph.edges.length} edges from ${documents.length} documents.`,
+      ui.buildSummary(
+        graph.nodes.length,
+        graph.edges.length,
+        docsToProcess.length,
+        cache.unchanged.length,
+        elapsed,
+      ),
     );
-    console.error(`Graph saved to kg/graph.json`);
   } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : err}`);
+    console.error(ui.err(`Error: ${err instanceof Error ? err.message : err}`));
     process.exitCode = 1;
   }
 }

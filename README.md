@@ -1,14 +1,39 @@
 # Open-KG
 
-Knowledge Graph compiler — extract structured knowledge from Markdown and text documents using LLMs.
+**Stop paying the "Dark Knowledge" tax.**
 
-Given a folder of unstructured documents, `kg` generates a structured knowledge graph and lets you query it with natural language.
+Your company's most valuable asset is its logic, but right now, that logic is trapped in messy Slack threads and SaaS silos. Open-KG is the open-standard compiler that turns your local Markdown files into a **Machine-Readable Organizational Brain**.
 
-## Vision
+- **Universal Extraction:** Turn notes into a queryable Graph.
+- **Sovereign by Design:** Your data stays on your drive. Nothing leaves without you seeing exactly what's sent.
+- **Agent-Ready:** Export a deterministic JSON brain that any LLM can navigate perfectly.
 
-Organizations accumulate knowledge in scattered documents — meeting notes, RFCs, decision logs, project wikis. Open-KG turns that unstructured text into a queryable knowledge graph, automatically. No database, no server, no setup. Just files in, graph out.
+```
+$ kg build ./docs
 
-Designed for future agent automation: the graph output is deterministic JSON that any tool can consume.
+┌ Building knowledge graph from ./docs
+│ Found 3 documents (2 .md, 1 .txt)
+│  Privacy Check — data sent to LLM for extraction:
+│    • team.md (0.4KB text content only)
+│    • decisions.md (0.5KB text content only)
+│    • architecture.txt (0.3KB text content only)
+│    No file paths, metadata, or system info is transmitted.
+│
+│ ██████████████████░░ [1/3] Extracting from team.md...
+│   ├── Person Alice Chen
+│   ├── Person Bob Martinez
+│   ├── Project Project Phoenix
+│   └── +5 nodes  +4 edges  from team.md
+│ ████████████████████ [3/3] Extracting from architecture.txt...
+│
+┌─────────────────────────────────────────────────────
+│  BUILD COMPLETE
+│
+│  Graph IQ: +12 Nodes │ +9 Edges │ 3 Docs Compiled
+│  Elapsed: 4.2s
+│  Output: .kg/graph.json
+└─────────────────────────────────────────────────────
+```
 
 ## Quick Start
 
@@ -16,34 +41,37 @@ Designed for future agent automation: the graph output is deterministic JSON tha
 npm install && npm run build
 export ANTHROPIC_API_KEY=sk-ant-...
 
-npx kg build ./examples              # extract a graph from your docs
-npx kg stats                          # see what was extracted
-npx kg query "Who works on Project Phoenix?"
-npx kg viz                            # open an interactive visualization
+kg build ./docs                       # extract a graph — auto-creates .kg/
+kg stats                              # see what was extracted
+kg query "Who works on Project Phoenix?"
+kg viz                                # open the Digital Brain visualization
+kg lint ./docs                        # score your docs' graph readiness
 ```
 
-That's it. No `kg init` required — `build` creates the graph automatically.
+No `kg init` required. No database. No server. Just files in, graph out.
 
 ## Commands
 
 ### `kg build <folder>`
 
-Recursively scans a folder for `.md` and `.txt` files, extracts entities and relationships using an LLM, performs entity resolution, and writes the result to `kg/graph.json`.
+Recursively scans for `.md` and `.txt` files, extracts entities and relationships via LLM, runs entity resolution, and writes `.kg/graph.json`.
 
 ```bash
-kg build ./docs                       # build from a folder
-kg build ./docs --dry-run             # preview which files would be processed
+kg build ./docs                       # full build
+kg build ./docs --dry-run             # preview without calling the LLM
 kg build ./docs --model claude-sonnet-4-20250514
 ```
 
 Features:
-- **Incremental rebuilds** — unchanged files are skipped automatically (content hash cache)
-- **Dry-run mode** — see what would be processed without calling the LLM
-- **Large file warnings** — files over 100KB trigger a warning before extraction
+- **Incremental rebuilds** — unchanged files are skipped automatically (SHA-256 content hash)
+- **Dry-run mode** — see what would be processed before spending API tokens
+- **Large file warnings** — files over 100KB trigger a warning
+- **Privacy banner** — shows exactly which text is sent to the LLM. No file paths, metadata, or system info transmitted.
+- **`.kgignore`** — drop a `.kgignore` file in your folder to exclude private notes (works like `.gitignore`)
 
 ### `kg stats`
 
-Print a quick summary of the graph: node counts, edge counts, entity types, top connected entities, and source documents.
+Quick summary: node/edge counts, entity types, relationship types, most connected entities, source documents.
 
 ```bash
 kg stats
@@ -51,42 +79,68 @@ kg stats
 
 ### `kg query "<question>"`
 
-Answers a natural language question using only the knowledge graph. Shows which nodes were referenced in the answer.
+Natural language question answering against your knowledge graph.
 
 ```bash
 kg query "Who works on Project Phoenix?"
-kg query "What decisions have been made?" --model claude-sonnet-4-20250514
+kg query "What decisions depend on the API Redesign?"
 ```
 
 ### `kg viz`
 
-Generate an interactive HTML visualization of the graph with a force-directed layout. Nodes are draggable, hoverable, and color-coded by type.
+Generate an interactive **Digital Brain** visualization — glassmorphism dark theme, glowing edges, translucent nodes, force-directed layout. Screenshot-worthy.
 
 ```bash
-kg viz                                # writes kg/graph.html
-kg viz --format dot                   # writes kg/graph.dot (for Graphviz)
-kg viz -o my-graph.html               # custom output path
-kg viz --format dot -o -              # DOT to stdout
+kg viz                                # writes .kg/graph.html
+kg viz --format dot                   # writes .kg/graph.dot (Graphviz)
+kg viz -o brain.html                  # custom output path
+```
+
+### `kg lint [folder]`
+
+Score your documentation's **Graph Readiness** out of 100. Finds island nodes, weak connections, missing cross-references, and low entity diversity.
+
+```bash
+kg lint ./docs
+```
+
+Example output:
+```
+  ▲ Entity 'Project X' is an island. Connect it to a 'Person' or 'Decision' node to increase Graph IQ.
+  ● 8/10 entities appear in only one document. Cross-referencing improves graph density.
+
+  Graph Readiness: 72/100 ★★★★☆
 ```
 
 ### `kg export`
 
-Outputs the graph to stdout. Supports JSON, Markdown, and DOT formats.
+Pipe-friendly output to stdout.
 
 ```bash
-kg export                             # JSON to stdout
+kg export                             # JSON
 kg export --format markdown           # human-readable tables
-kg export --format dot                # Graphviz DOT format
+kg export --format dot                # Graphviz DOT
 kg export | jq '.nodes | length'      # pipe to jq
 ```
 
 ### `kg init`
 
-Creates the `kg/` directory and an empty `graph.json`. Optional — `build` creates one automatically.
+Optional — `build` auto-creates `.kg/` for you.
 
 ```bash
-kg init                               # creates kg/graph.json
-kg init --force                       # overwrites existing graph
+kg init                               # creates .kg/graph.json
+kg init --force                       # reset the graph
+```
+
+## `.kgignore`
+
+Drop a `.kgignore` file in your document folder to exclude private files from extraction:
+
+```
+# Private notes
+private/
+*.secret.md
+personal-journal.txt
 ```
 
 ## Graph Format
@@ -112,62 +166,34 @@ kg init --force                       # overwrites existing graph
 }
 ```
 
-## Ontology (v0)
+## Sovereign Data Architecture
 
-### Entity Types
-
-| Type | Description |
-|------|-------------|
-| Person | Individual people |
-| Project | Projects and initiatives |
-| Task | Work items and tasks |
-| Decision | Decisions made by the team |
-| Organization | Companies and organizations |
-| Document | Documents, RFCs, specs |
-
-### Relationship Types
-
-| Type | Description |
-|------|-------------|
-| works_on | Person works on a project/task |
-| owns | Person owns a project/task/document |
-| assigned_to | Task assigned to a person |
-| decided | Person/org made a decision |
-| mentioned_in | Entity referenced in a document |
-| depends_on | Task/decision depends on another |
-
-## Architecture
+Open-KG follows a `.git`-style hidden directory pattern:
 
 ```
-src/
-  index.ts          CLI entry point (Commander)
-  cli/              Command handlers (init, build, query, export, stats, viz)
-  pipeline/         Document loading, extraction orchestration, content caching
-  llm/              LLM abstraction interface + Claude implementation
-    interface.ts    Swappable LLM provider contract
-    prompts.ts      Prompt templates (separated for easy iteration)
-    claude.ts       Anthropic SDK integration
-  graph/            Type definitions, storage, entity resolution
-  query/            Query execution engine
+your-project/
+  docs/
+    team.md
+    decisions.md
+    .kgignore           # exclude private files
+  .kg/                  # auto-created, git-ignored
+    graph.json          # your knowledge graph
+    graph.html          # visualization
+    .cache.json         # content hashes for incremental builds
 ```
 
-**Data flow:**
+All data stays local. The only external call is to the LLM API for extraction, and the privacy banner shows you exactly what's sent.
 
-```
-documents → loader → cache check → LLM extraction → ontology validation → entity resolution → graph.json
-                                                                                                   ↓
-                                                                           question → LLM query → answer
-                                                                                                   ↓
-                                                                                    viz → graph.html
-```
+## Ontology
 
-## Configuration
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | Your Anthropic API key ([get one here](https://console.anthropic.com/)) |
-
-The `--model` flag on `build` and `query` commands overrides the default model (`claude-sonnet-4-20250514`).
+| Entity Types | Relationship Types |
+|---|---|
+| Person | works_on |
+| Project | owns |
+| Task | assigned_to |
+| Decision | decided |
+| Organization | mentioned_in |
+| Document | depends_on |
 
 ## Development
 
@@ -175,15 +201,17 @@ The `--model` flag on `build` and `query` commands overrides the default model (
 npm install        # install dependencies
 npm run build      # compile TypeScript
 npm run dev        # watch mode
-npm test           # run unit tests
+npm test           # run unit tests (13 tests)
 ```
 
 ## Roadmap
 
-- [x] Incremental builds (content hash caching)
-- [x] Graph visualization (HTML + DOT export)
+- [x] Incremental builds (SHA-256 content hash caching)
+- [x] Interactive visualization (glassmorphism Digital Brain)
+- [x] `kg lint` — graph readiness scoring
+- [x] `.kgignore` support
+- [x] Privacy-first build transparency
 - [x] Dry-run preview mode
-- [x] Large file warnings
 - [ ] Fuzzy entity resolution (Levenshtein / embedding similarity)
 - [ ] Custom ontologies (load from config file)
 - [ ] Alternative LLM providers (OpenAI, Ollama, local models)

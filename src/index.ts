@@ -7,25 +7,27 @@ import { queryCommand } from "./cli/query.js";
 import { exportCommand } from "./cli/export.js";
 import { statsCommand } from "./cli/stats.js";
 import { vizCommand } from "./cli/viz.js";
+import { lintCommand } from "./cli/lint.js";
 
 const program = new Command();
 
 program
   .name("kg")
   .description(
-    "Knowledge Graph compiler — extract structured knowledge from .md and .txt documents using LLMs.\n\n" +
+    "Knowledge Graph compiler — turn local documents into a machine-readable brain.\n\n" +
       "Quick start:\n" +
-      "  $ kg build ./docs            Extract a knowledge graph from your documents\n" +
-      "  $ kg stats                    See what's in the graph\n" +
-      "  $ kg query \"Who works on X?\"  Ask questions about the graph\n" +
-      "  $ kg viz                      Open an interactive visualization",
+      "  $ kg build ./docs            Extract a knowledge graph from your docs\n" +
+      "  $ kg stats                    See what was extracted\n" +
+      "  $ kg query \"Who works on X?\"  Ask questions in natural language\n" +
+      "  $ kg viz                      Open an interactive visualization\n" +
+      "  $ kg lint ./docs              Score your docs' graph readiness",
   )
-  .version("0.2.0");
+  .version("0.3.0");
 
 program
   .command("init")
   .description("Initialize an empty graph (optional — build creates one automatically)")
-  .option("--force", "Overwrite existing graph.json")
+  .option("--force", "Overwrite existing .kg/graph.json")
   .action(initCommand);
 
 program
@@ -60,9 +62,18 @@ program
 
 program
   .command("viz")
-  .description("Generate an interactive HTML visualization of the graph")
+  .description("Generate an interactive HTML visualization (Digital Brain)")
   .option("--format <format>", "Output format: html or dot", "html")
-  .option("-o, --output <path>", "Output file path (default: kg/graph.html or kg/graph.dot)")
+  .option(
+    "-o, --output <path>",
+    "Output file path (default: .kg/graph.html or .kg/graph.dot)",
+  )
   .action(vizCommand);
+
+program
+  .command("lint")
+  .description("Score your documents' graph readiness — find islands, gaps, and weak connections")
+  .argument("[folder]", "Folder to cross-reference against the graph")
+  .action(lintCommand);
 
 program.parse();

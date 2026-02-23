@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, access } from "node:fs/promises";
 import { join } from "node:path";
 import type { LoadedDocument } from "./loader.js";
 
-const CACHE_DIR = "kg";
+const CACHE_DIR = ".kg";
 const CACHE_FILE = ".cache.json";
 
 interface CacheEntry {
