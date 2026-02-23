@@ -1,10 +1,22 @@
 # Open-KG — Next Steps
 
-## Status: v0.1 complete and pushed
+## Status: v0.2 complete
 
-All 4 CLI commands implemented (`init`, `build`, `query`, `export`), 13/13 tests passing, pushed to `claude/kg-cli-tool-v0.1-SGkdW`.
+6 CLI commands (`init`, `build`, `query`, `export`, `stats`, `viz`), incremental caching, dry-run, interactive HTML visualization. 13/13 tests passing.
 
 ---
+
+## Done in v0.2
+
+- [x] Content hash caching — skip unchanged documents on rebuild
+- [x] `kg viz` — interactive HTML + DOT graph visualization
+- [x] `kg stats` — quick graph summary command
+- [x] `--dry-run` flag on build for preview mode
+- [x] Large file warnings (>100KB)
+- [x] DOT format for export
+- [x] Improved CLI help text with quick start examples
+- [x] MIT License
+- [x] `files` field in package.json for clean npm publish
 
 ## Immediate: Validate with Real LLM
 
@@ -13,24 +25,15 @@ All 4 CLI commands implemented (`init`, `build`, `query`, `export`), 13/13 tests
 - [ ] Tune prompts in `src/llm/prompts.ts` based on real output
 - [ ] Verify entity resolution merges "Alice Chen" across all 3 documents
 
-## Short-term: Harden v0.1
+## v0.3: Key Improvements
 
-- [ ] Add `LICENSE` file (MIT)
-- [ ] Polish per-command help text (`kg build --help`, etc.)
-- [ ] Warn on large documents (>100KB) before sending to LLM
-- [ ] Add `.npmignore` or `"files"` field in package.json for clean `npm publish`
-
-## v0.2: Key Improvements
-
-- [ ] **Content hash caching** — skip re-extracting unchanged documents on rebuild
 - [ ] **Fuzzy entity resolution** — Levenshtein/Jaccard threshold to catch "Alice Chen" vs "Alice C."
-- [ ] **`kg viz`** — export to DOT format or simple HTML for graph visualization
-- [ ] **`kg propose`** — preview mode that shows extracted entities before writing to graph
 - [ ] **Custom ontologies** — load entity/relationship types from a config file
+- [ ] **`kg watch`** — file watching for auto-rebuild on changes
+- [ ] **Confidence scores** on extracted entities
 
-## v0.3+: Bigger Features
+## v0.4+: Bigger Features
 
 - [ ] Alternative LLM providers (OpenAI, Ollama, local models)
 - [ ] Document chunking for large files
-- [ ] Incremental builds with file watching
 - [ ] CI/CD pipeline + npm publish workflow

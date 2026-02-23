@@ -8,8 +8,9 @@ import type { LoadedDocument } from "./loader.js";
 export async function extractFromDocuments(
   documents: LoadedDocument[],
   llm: LLMProvider,
+  existingGraph?: KnowledgeGraph,
 ): Promise<KnowledgeGraph> {
-  let graph = emptyGraph();
+  let graph = existingGraph ?? emptyGraph();
   const total = documents.length;
 
   for (let i = 0; i < total; i++) {
